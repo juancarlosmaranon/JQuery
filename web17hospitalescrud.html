@@ -44,6 +44,7 @@
         //variable de la url
         var url = "https://apicrudhospital.azurewebsites.net/";
         function cargarHospitales(){
+            $("tbody").html("");
             //crear variabe request haciendo la lamada a la api
             var request = "webresources/hospitales";
             //hacer la llamada de ajax para recuperar 
@@ -64,15 +65,16 @@
                         var col4 = $("<td>", { "text": hosp.telefono });
                         var col5 = $("<td>", { "text": hosp.camas });
                         var col6 = $("<td>");
-                        var btnborrar = $("<button>", {"text":"Eliminar","id":"btnborrar" });
+                        var btnborrar = $("<button>", {"text":"Eliminar","id":"btnborrar", "value": hosp.idhospital });
                         $(col6).append(btnborrar);
                         
                         //FUNCION DE BORRADO DENTRO DEL BOTON
                         $(btnborrar).click(function(){
                             //DECLARAMOS EL REQUEST CORRESPONDIENTE Y 
                             //USAMOS EL METODO POST EN EL  AJAX
-                            var request = "webresources/hospitales/delete";
-                            var num = parseInt($("#cajanumero").val());
+                            var url = "https://apicrudhospital.azurewebsites.net/";
+                            var request = "webresources/hospitales/delete/";
+                            var num = parseInt($(this).val());
                             $.ajax({
                                 "url": url + request+num
                                 ,"method": "DELETE"
@@ -87,7 +89,8 @@
                         var col7 = $("<td>");
                         var btnmodificar = $("<button>", {"text": "Modificar","id":"btnmodificar" });
                         $(col7).append(btnmodificar);
-                        $(btnmodificar).click(function(){
+                        btnmodificar.click(function(){
+                            var url = "https://apicrudhospital.azurewebsites.net/";
                             var request = "webresources/hospitales/put";
                             var num = parseInt($("#cajanumero").val());
                             var nom = $("#cajanombre").val();
@@ -95,6 +98,41 @@
                             var tel = $("#cajatelefono").val();
                             var cam = parseInt($("#cajacama").val());
 
+                            var hospital = new Object();
+
+                            //AL OBJETO LE DAMOS EL VALOR RECOGIDO A CADA APARTADO
+                            //LAS PROPIEDADES DEBEN COINCIDIR CON EL SERVICIO
+                            hospital.idhospital = num;
+                            hospital.nombre = nom;
+                            hospital.direccion = dir;
+                            hospital.telefono = tel;
+                            hospital.camas = cam;
+
+                            //EL OBJETO CREADO DEBEMOS TRANSFORMARLO AL FORMATO
+                            //DEL SERVICIO: JSON
+                            //PARA TRANSFORMAR A JSON: JSON.strigfy(OBJETO)
+                            var dataJson = JSON.stringify(hospital);
+                            console.log(dataJson);
+
+                            //LAS PETICIONES NO GET UTILIZAN $.ajax
+                            //SI ENVIAMOS INFORMACION AL SERVICIO DEBEMOS
+                            //INCLUIR DOS ELEMENTOS MAS DENTRO DE $.ajax
+                            // -contentType: EL TIPO DE DATO A ENVIAR
+                            // -data: RL OBJETO A ENVIAR
+                            var request = "webresources/hospitales/put";
+                            $.ajax({
+                            "url": url + request
+                            , "type": "PUT"
+                            , "data": dataJson
+                            , "contentType": "application/json"
+                            ,success : function() {
+                                cargarHospitales();
+                                
+                                console.log("Insertado");
+                            },"error":function(error){
+                                    console.log("Error servicio INSERTAR");
+                                }
+                            });
                             
                         });
                 
@@ -119,7 +157,6 @@
         //iniciamos la funcion
         $(document).ready(function() {
             cargarHospitales();
-            var html = "";
             $("#botoninsertar").click(function(){
                 
                 //creamos variables recuperando su valor con .val()
